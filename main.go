@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-
 	r := mux.NewRouter()
 	//  on the default page we will serve  our static index page....
 	r.Handle("/", http.FileServer(http.Dir("./views")))
@@ -36,6 +35,7 @@ func main() {
 	r.Handle("/products/{slug}/info", GetFeedbackProduct).Methods("GET")
 	r.Handle("/products/{slug}/add", AddFeedbackProduct).Methods("POST")
 	r.Handle("/products/{slug}/update", UpdateFeedbackProduct).Methods("POST")
+	r.Handle("/products/delete", DeleteFeedbackProduct).Methods("DELETE")
 
 	port := os.Getenv("PORT")
 	fmt.Printf("serve runing in port %v\n", port)
