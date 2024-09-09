@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+go build 
+./vr-auth
+
