@@ -2,11 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+
+	_ "github.com/go-playground/universal-translator"
+	_ "github.com/go-playground/validator/v10/translations/en"
+	"github.com/go-playground/validator/v10"
 )
 
 // NotImplemented the function for handle the response from the user
@@ -33,7 +38,7 @@ var ProductsHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 		Status:  http.StatusOK,
 		Product: products,
 	}
-	err := responseHelper(w, response)
+	err := ResponseHelper(w, response)
 	if err != nil {
 		log.Fatalf("erorr found: %v", err)
 	}
@@ -67,7 +72,7 @@ var AddFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 	}
 
 	// close the body after the function done
-	defer closeBody(r.Body)
+	defer CloseBody(r.Body)
 
 	product.Slug = slug            // adding the slug to the product
 	product.Id = len(products) + 1 // adding the id for the product
@@ -75,6 +80,16 @@ var AddFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
 		return
 	}
+
+	// starting validator the product
+	validator := validator.New()
+	err = validator.Struct(product)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to validate the product: %v", err), http.StatusBadRequest)
+		return
+	}
+	
+	// FormatedError := FormatedErrorValidator(err, trans) // using for another way to get the error
 
 	w.Header().Set("content-Type", "application/json")
 	if product.Slug != "" {
@@ -91,7 +106,7 @@ var AddFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 			Product: Product{},
 		}
 	}
-	err = responseHelper(w, response)
+	err = ResponseHelper(w, response)
 	if err != nil {
 		log.Fatalf("erorr found: %v", err)
 	}
@@ -127,7 +142,7 @@ var GetFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 		}
 	}
 	// convert the struct of response to json
-	err = responseHelper(w, response)
+	err = ResponseHelper(w, response)
 	if err != nil {
 		log.Fatalf("erorr found: %v", err)
 	}
@@ -148,7 +163,7 @@ var UpdateFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http
 	}
 
 	// close the body after the function done
-	defer closeBody(r.Body)
+	defer CloseBody(r.Body)
 
 	// create the feedback struct to get the values from the body
 	vars := mux.Vars(r) // getting the slug from the url
@@ -173,7 +188,7 @@ var UpdateFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http
 			Status:  http.StatusNotFound,
 			Product: Product{},
 		}
-		err = responseHelper(w, response)
+		err = ResponseHelper(w, response)
 		if err != nil {
 			log.Fatalf("erorr found: %v", err)
 		}
@@ -199,7 +214,7 @@ var UpdateFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http
 		Status: http.StatusOK,
 		Product: updateProduct,
 	}
-	err = responseHelper(w, response)
+	err = ResponseHelper(w, response)
 	if err != nil {
 		log.Fatalf("erorr found: %v", err)
 	}
@@ -218,7 +233,7 @@ var DeleteFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http
 	}
 
 	// close the body after the function done
-	defer closeBody(r.Body)
+	defer CloseBody(r.Body)
 
 	// create the feedback struct to get the values from the body
 
@@ -234,7 +249,7 @@ var DeleteFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http
 			Status: http.StatusNotFound,
 			Product: Product{},
 		}
-		err = responseHelper(w, response)
+		err = ResponseHelper(w, response)
 		if err != nil {
 			log.Fatalf("erorr found: %v", err)
 		}
@@ -253,7 +268,7 @@ var DeleteFeedbackProduct = http.HandlerFunc(func(w http.ResponseWriter, r *http
 		Status: http.StatusOK,
 		Product: Product{},
 	}
-	err = responseHelper(w, response)
+	err = ResponseHelper(w, response)
 	if err != nil {
 		log.Fatalf("erorr found: %v", err)
 	}

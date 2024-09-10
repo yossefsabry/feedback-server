@@ -5,12 +5,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+
 	r := mux.NewRouter()
 	//  on the default page we will serve  our static index page....
 	r.Handle("/", http.FileServer(http.Dir("./views")))
@@ -30,18 +31,30 @@ func main() {
 	// /products - which will receiver  a list of products  that the user can leave feedback on
 	// /products/{slug}/feedback - which will capture user feedback on products
 	// starting creating the end points for the api
-	r.Handle("/status", StatusHandler).Methods("GET")
-	r.Handle("/products", ProductsHandler).Methods("GET")
-	r.Handle("/products/{slug}/info", GetFeedbackProduct).Methods("GET")
-	r.Handle("/products/{slug}/add", AddFeedbackProduct).Methods("POST")
-	r.Handle("/products/{slug}/update", UpdateFeedbackProduct).Methods("POST")
-	r.Handle("/products/delete", DeleteFeedbackProduct).Methods("DELETE")
+
+    // Endpoint to generate JWT
+    r.HandleFunc("/token", AuthPage).Methods("GET")  // for genrate a token
+	r.Handle("/products", VerifyJWT(ProductsHandler)).Methods("GET")
+	r.Handle("/products/{slug}/info",VerifyJWT(GetFeedbackProduct)).Methods("GET")
+	r.Handle("/products/{slug}/add", VerifyJWT(AddFeedbackProduct)).Methods("POST")
+	r.Handle("/products/{slug}/update", VerifyJWT(UpdateFeedbackProduct)).Methods("POST")
+	r.Handle("/products/delete", VerifyJWT(DeleteFeedbackProduct)).Methods("DELETE")
+
+
+	// adding the cors wrapper
+	corsWrapper := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "DELETE", "PUT"},
+		AllowedHeaders: []string{"Content-Type", "Authorization", "Access-Control-Allow-Origin", "Accept", "*"},
+		AllowCredentials: true,
+	})
 
 	port := os.Getenv("PORT")
 	fmt.Printf("serve runing in port %v\n", port)
 
-	if err := http.ListenAndServe(port, r); err != nil {
+	if err := http.ListenAndServe(port, corsWrapper.Handler(r)); err != nil {
 		log.Fatalf("error happend: %v\n", err)
 	}
 	return
 }
+

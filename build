@@ -1,5 +1,5 @@
 #!/usr/bin/bash
 
 go build 
-./vr-auth
+./feedback-server
 
